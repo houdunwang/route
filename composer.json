@@ -1,0 +1,37 @@
+{
+  "name": "houdunwang/route",
+  "description": "数据库管理组件提供了丰富的数据操作功能，使用我们在开发中快速的管理数据",
+  "type": "project",
+  "keywords": [
+    "houdunwang",
+    "hdphp",
+    "后盾网",
+    "后盾人",
+    "向军老师",
+    "路由器",
+    "router"
+  ],
+  "homepage": "http://www.houdunwang.com/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "后盾网向军",
+      "email": "2300071698@qq.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=5.4.0",
+    "houdunwang/config": "~1.0",
+    "houdunwang/cache": "~1.0",
+    "houdunwang/request": "~1.0",
+    "houdunwang/controller": "~1.0",
+    "houdunwang/container": "~1.0"
+  },
+  "autoload": {
+    "files": [],
+    "psr-4": {
+      "houdunwang\\route\\": "src"
+    }
+  }
+}
