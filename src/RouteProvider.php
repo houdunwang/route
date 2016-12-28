@@ -9,19 +9,20 @@
  * '-------------------------------------------------------------------*/
 namespace houdunwang\route;
 
-use hdphp\kernel\ServiceProvider;
+use houdunwang\framework\ServiceProvider;
 
 class RouteProvider extends ServiceProvider {
 	//延迟加载
 	public $defer = true;
 
 	public function boot() {
-
+		//解析路由
+		\Route::dispatch();
 	}
 
 	public function register() {
 		$this->app->single( 'Route', function ( $app ) {
-			return new Route( $app );
+			return Route::single( $app );
 		} );
 	}
 }
