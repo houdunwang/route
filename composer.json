@@ -1,6 +1,6 @@
 {
   "name": "houdunwang/route",
-  "description": "数据库管理组件提供了丰富的数据操作功能，使用我们在开发中快速的管理数据",
+  "description": "路由管理组件",
   "type": "project",
   "keywords": [
     "houdunwang",
