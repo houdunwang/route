@@ -9,11 +9,11 @@
  * '-------------------------------------------------------------------*/
 namespace houdunwang\route;
 
-use houdunwang\framework\ServiceProvider;
+use houdunwang\framework\build\Provider;
 
-class RouteProvider extends ServiceProvider {
+class RouteProvider extends Provider {
 	//延迟加载
-	public $defer = true;
+	public $defer = false;
 
 	public function boot() {
 		//解析路由
@@ -21,8 +21,8 @@ class RouteProvider extends ServiceProvider {
 	}
 
 	public function register() {
-		$this->app->single( 'Route', function ( $app ) {
-			return Route::single( $app );
+		$this->app->single( 'Route', function () {
+			return new Route();
 		} );
 	}
 }

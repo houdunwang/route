@@ -11,6 +11,7 @@ namespace houdunwang\route\build;
 
 use Closure;
 use houdunwang\container\Container;
+use houdunwang\controller\Controller;
 use houdunwang\request\Request;
 
 class Compile extends Setting {

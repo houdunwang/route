@@ -9,9 +9,9 @@
  * '-------------------------------------------------------------------*/
 namespace houdunwang\route;
 
-use hdphp\kernel\ServiceFacade;
+use houdunwang\framework\build\Facade;
 
-class RouteFacade extends ServiceFacade {
+class RouteFacade extends Facade {
 	public static function getFacadeAccessor() {
 		return 'Route';
 	}

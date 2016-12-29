@@ -11,6 +11,7 @@ namespace houdunwang\route\build;
 
 use houdunwang\cache\Cache;
 use houdunwang\config\Config;
+use houdunwang\controller\Controller;
 use houdunwang\request\Request;
 
 /**
@@ -30,15 +31,6 @@ class Base extends Compile {
 		':num' => '[0-9]+',
 		':all' => '.*',
 	];
-
-	//构造函数
-	public function __construct() {
-		//因为Request服务需要IS_GET等常量需要Request服务生成
-		if ( ! defined( 'IS_GET' ) ) {
-			Request::ip();
-		}
-		$this->requestUri = $this->getRequestUri();
-	}
 
 	//请求地址
 	protected function getRequestUri() {
@@ -82,6 +74,8 @@ class Base extends Compile {
 	 * @return bool|void
 	 */
 	public function dispatch() {
+		//请求URL
+		$this->requestUri = $this->getRequestUri();
 		//设置路由缓存
 		if ( Config::get( 'route.cache' ) && ( $route = Cache::get( '_ROUTES_' ) ) ) {
 			$this->route = $route;
@@ -96,7 +90,6 @@ class Base extends Compile {
 				return;
 			}
 		}
-
 		//GET模式处理
 		Controller::run();
 	}
