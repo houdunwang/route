@@ -16,13 +16,12 @@ class RouteProvider extends Provider {
 	public $defer = false;
 
 	public function boot() {
-		//解析路由
-		\Route::dispatch();
+
 	}
 
 	public function register() {
 		$this->app->single( 'Route', function () {
-			return new Route();
+			return Route::single();
 		} );
 	}
 }
