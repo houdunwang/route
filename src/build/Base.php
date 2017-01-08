@@ -90,8 +90,20 @@ class Base extends Compile {
 				return;
 			}
 		}
-		//GET模式处理
-		Controller::run();
+		/**
+		 * 控制器处理
+		 * 当请求参数为空或者不存在访问控制器的GET变量s为路由解析失败执行ROUTER_NOT_FOUND中间件
+		 * 否者执行控制器处理
+		 */
+		$requestUrl = trim( preg_replace( '#\w+\.php#i', '', $_SERVER['REQUEST_URI'] ), '/' );
+		$scriptName = trim( preg_replace( '#\w+\.php#i', '', $_SERVER['SCRIPT_NAME'] ), '/' );
+		//执行控制器处理
+		if ( $requestUrl == $scriptName || Request::get( Config::get( 'http.url_var' ) ) ) {
+			Controller::run();
+		} else {
+			//路由解析失败,控制器执行条件不满足时执行中间件
+			Middleware::exe( 'ROUTER_NOT_FOUND' );
+		}
 	}
 
 	/**
