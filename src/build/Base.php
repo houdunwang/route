@@ -98,7 +98,7 @@ class Base extends Compile {
 		$requestUrl = trim( preg_replace( '#\w+\.php#i', '', $_SERVER['REQUEST_URI'] ), '/' );
 		$scriptName = trim( preg_replace( '#\w+\.php#i', '', $_SERVER['SCRIPT_NAME'] ), '/' );
 		//执行控制器处理
-		if ( $requestUrl == $scriptName || Request::get( Config::get( 'http.url_var' ) ) ) {
+		if ( Config::get( 'route.mode' ) || ( $requestUrl == $scriptName || Request::get( Config::get( 'http.url_var' ) ) ) ) {
 			Controller::run();
 		} else {
 			//路由解析失败,控制器执行条件不满足时执行中间件
