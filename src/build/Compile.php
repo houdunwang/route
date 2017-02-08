@@ -19,6 +19,8 @@ class Compile extends Setting {
 	protected $found = false;
 	//路由参数
 	protected $args = [ ];
+	//匹配成功的路由规则
+	protected $matchRoute = '';
 
 	//匹配路由
 	protected function isMatch( $key ) {
@@ -31,7 +33,8 @@ class Compile extends Setting {
 			}
 			//设置GET参数
 			$this->args = $this->route[ $key ]['get'];
-
+			//匹配成功的路由规则
+			$this->matchRoute = $this->route[$key];
 			return $this->found = true;
 		}
 	}

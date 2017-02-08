@@ -161,4 +161,12 @@ class Base extends Compile {
 			return isset( $this->args[ $name ] ) ? $this->args[ $name ] : null;
 		}
 	}
+
+	/**
+	 * 获取匹配成功的路由规则
+	 * @return string
+	 */
+	public function getMatchRoute() {
+		return $this->matchRoute;
+	}
 }
