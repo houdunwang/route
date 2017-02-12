@@ -102,7 +102,7 @@ class Base extends Compile {
 			Controller::run();
 		} else {
 			//路由解析失败,控制器执行条件不满足时执行中间件
-			Middleware::exe( 'ROUTER_NOT_FOUND' );
+			Middleware::system( 'router_not_found' );
 		}
 	}
 

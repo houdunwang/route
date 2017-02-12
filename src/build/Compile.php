@@ -34,7 +34,8 @@ class Compile extends Setting {
 			//设置GET参数
 			$this->args = $this->route[ $key ]['get'];
 			//匹配成功的路由规则
-			$this->matchRoute = $this->route[$key];
+			$this->matchRoute = $this->route[ $key ];
+
 			return $this->found = true;
 		}
 	}
@@ -95,6 +96,23 @@ class Compile extends Setting {
 			//设置控制器与方法
 			Request::set( 'get.' . c( 'http.url_var' ), $this->route[ $key ]['callback'] );
 			Controller::run( $this->route[ $key ]['get'] );
+		}
+	}
+
+	//URL事件处理
+	protected function _alias( $key ) {
+		if ( IS_GET && $this->isMatch( $key ) ) {
+			//替换GET参数
+			$url = $this->route[ $key ]['callback'];
+			foreach ( $this->route[ $key ]['get'] as $k => $v ) {
+				$url = str_replace( '{' . $k . '}', $v, $url );
+			}
+			//解析后的GET参数设置到全局$_GET中
+			parse_str( $url, $gets );
+			foreach ( (array) $gets as $k => $v ) {
+				Request::set( 'get.' . $k, $v );
+			}
+			Controller::run( $gets );
 		}
 	}
 
