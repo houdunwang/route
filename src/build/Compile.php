@@ -94,7 +94,7 @@ class Compile extends Setting {
 			echo $reflectionFunction->invokeArgs( $args );
 		} else {
 			//设置控制器与方法
-			Request::set( 'get.' . c( 'http.url_var' ), $this->route[ $key ]['callback'] );
+			Request::set( 'get.' . Config::get( 'http.url_var' ), $this->route[ $key ]['callback'] );
 			Controller::run( $this->route[ $key ]['get'] );
 		}
 	}

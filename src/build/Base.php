@@ -12,6 +12,7 @@ namespace houdunwang\route\build;
 use houdunwang\cache\Cache;
 use houdunwang\config\Config;
 use houdunwang\controller\Controller;
+use houdunwang\middleware\Middleware;
 use houdunwang\request\Request;
 
 /**

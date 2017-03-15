@@ -9,6 +9,7 @@
  * '-------------------------------------------------------------------*/
 namespace houdunwang\route;
 
+use houdunwang\config\Config;
 use houdunwang\framework\build\Provider;
 
 class RouteProvider extends Provider {
@@ -16,10 +17,15 @@ class RouteProvider extends Provider {
 	public $defer = false;
 
 	public function boot() {
-
+		//解析路由
+		require ROOT_PATH . '/system/routes.php';
+		Route::dispatch();
 	}
 
 	public function register() {
+		Config::set( 'controller.app', Config::get( 'app.path' ) );
+		Config::set( 'route.cache', Config::get( 'http.route_cache' ) );
+		Config::set( 'route.mode', Config::get( 'http.route_mode' ) );
 		$this->app->single( 'Route', function () {
 			return Route::single();
 		} );
