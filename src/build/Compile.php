@@ -7,18 +7,21 @@
  * |    WeChat: aihoudun
  * | Copyright (c) 2012-2019, www.houdunwang.com. All Rights Reserved.
  * '-------------------------------------------------------------------*/
+
 namespace houdunwang\route\build;
 
 use Closure;
 use houdunwang\container\Container;
 use houdunwang\controller\Controller;
 use houdunwang\request\Request;
+use houdunwang\response\Response;
+use houdunwang\view\View;
 
 class Compile extends Setting {
 	//匹配到路由
 	protected $found = false;
 	//路由参数
-	protected $args = [ ];
+	protected $args = [];
 	//匹配成功的路由规则
 	protected $matchRoute = '';
 
@@ -42,7 +45,7 @@ class Compile extends Setting {
 
 	//获取请求参数
 	protected function getArgs( $key ) {
-		$args = [ ];
+		$args = [];
 		if ( preg_match_all( $this->route[ $key ]['regexp'], $this->requestUri, $matched, PREG_SET_ORDER ) ) {
 			//参数列表
 			foreach ( $this->route[ $key ]['args'] as $n => $value ) {
@@ -76,7 +79,7 @@ class Compile extends Setting {
 			//反射分析闭包
 			$reflectionFunction = new \ReflectionFunction( $this->route[ $key ]['callback'] );
 			$gets               = $this->route[ $key ]['get'];
-			$args               = [ ];
+			$args               = [];
 			foreach ( $reflectionFunction->getParameters() as $k => $p ) {
 				if ( isset( $gets[ $p->name ] ) ) {
 					//如果GET变量中存在则将GET变量值赋予,也就是说GET优先级高
@@ -91,7 +94,12 @@ class Compile extends Setting {
 					}
 				}
 			}
-			echo $reflectionFunction->invokeArgs( $args );
+			$result = $reflectionFunction->invokeArgs( $args );
+			if ( IS_AJAX && is_array( $result ) ) {
+				Response::ajax( $result );
+			} else {
+				echo is_object( $result ) ? View::toString() : $result;
+			}
 		} else {
 			//设置控制器与方法
 			Request::set( 'get.' . Config::get( 'http.url_var' ), $this->route[ $key ]['callback'] );
@@ -101,7 +109,7 @@ class Compile extends Setting {
 
 	//URL事件处理
 	protected function _alias( $key ) {
-		if ( IS_GET && $this->isMatch( $key ) ) {
+		if ( $this->isMatch( $key ) ) {
 			//替换GET参数
 			$url = $this->route[ $key ]['callback'];
 			foreach ( $this->route[ $key ]['get'] as $k => $v ) {
