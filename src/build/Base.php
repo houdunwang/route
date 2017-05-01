@@ -12,9 +12,6 @@ namespace houdunwang\route\build;
 
 use houdunwang\cache\Cache;
 use houdunwang\config\Config;
-use houdunwang\controller\Controller;
-use houdunwang\middleware\Middleware;
-use houdunwang\request\Request;
 
 /**
  * 路由处理类
@@ -24,7 +21,7 @@ use houdunwang\request\Request;
  */
 class Base
 {
-    use Compile, Setting;
+    use Compile, Setting, Controller;
     //路由定义
     public $route = [];
     //请求的URI
@@ -63,7 +60,7 @@ class Base
     /**
      * 使用正则表达式限制参数
      *
-     * @param mixed  $name
+     * @param mixed $name
      * @param string $regexp
      *
      * @return $this
@@ -106,34 +103,11 @@ class Base
                 return;
             }
         }
-        /**
-         * 控制器处理
-         * 当请求参数为空或者不存在访问控制器的GET变量s为路由解析失败执行ROUTER_NOT_FOUND中间件
-         * 否者执行控制器处理
-         */
-        $requestUrl = trim(
-            preg_replace(
-                '#\w+\.php#i',
-                '',
-                $_SERVER['REQUEST_URI']
-            ),
-            '/'
-        );
-        $scriptName = trim(
-            preg_replace(
-                '#\w+\.php#i',
-                '',
-                $_SERVER['SCRIPT_NAME']
-            ),
-            '/'
-        );
-
-        //执行控制器处理
-        if (Config::get('route.mode')
-            || ($requestUrl == $scriptName
-                || Request::get(Config::get('http.url_var')))
-        ) {
-            return Controller::run();
+        //路由不存在时解析控制器
+        if ( ! $this->found) {
+            $this->setResult(
+                $this->controllerRun($this->getDefaultControllerAction())
+            );
         } else {
             //路由解析失败,控制器执行条件不满足时执行中间件
             _404();
@@ -201,15 +175,5 @@ class Base
         } else {
             return isset($this->args[$name]) ? $this->args[$name] : null;
         }
-    }
-
-    /**
-     * 获取匹配成功的路由规则
-     *
-     * @return string
-     */
-    public function getMatchRoute()
-    {
-        return $this->matchRoute;
     }
 }

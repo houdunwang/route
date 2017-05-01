@@ -20,18 +20,50 @@ trait Compile
     //匹配到路由
     protected $found = false;
     //路由参数
-    protected $args = [];
+    public $args = [];
     //匹配成功的路由规则
-    protected $matchRoute = '';
+    protected $matchRoute;
     //解析结果
     protected $result;
 
     /**
+     * 获取匹配成功的路由
+     *
+     * @return mixed
+     */
+    public function getMatchRoute()
+    {
+        return $this->matchRoute;
+    }
+
+    /**
+     * 设置匹配成功的路由
+     *
+     * @param mixed $matchRoute
+     */
+    private function setMatchRoute($matchRoute)
+    {
+        $this->matchRoute = $matchRoute;
+    }
+
+    /**
+     * 获取路由解析结果
+     *
      * @return mixed
      */
     public function getResult()
     {
         return $this->result;
+    }
+
+    /**
+     * 设置路由解析结果
+     *
+     * @param mixed $result
+     */
+    public function setResult($result)
+    {
+        $this->result = $result;
     }
 
     //匹配路由
@@ -47,7 +79,7 @@ trait Compile
             //设置GET参数
             $this->args = $this->route[$key]['get'];
             //匹配成功的路由规则
-            $this->matchRoute = $this->route[$key];
+            $this->setMatchRoute($this->route[$key]);
 
             return $this->found = true;
         }
@@ -57,8 +89,12 @@ trait Compile
     protected function getArgs($key)
     {
         $args = [];
-        if (preg_match_all($this->route[$key]['regexp'], $this->requestUri,
-            $matched, PREG_SET_ORDER)) {
+        if (preg_match_all(
+            $this->route[$key]['regexp'],
+            $this->requestUri,
+            $matched,
+            PREG_SET_ORDER
+        )) {
             //参数列表
             foreach ($this->route[$key]['args'] as $n => $value) {
                 if (isset($matched[0][$n + 1])) {
@@ -89,7 +125,7 @@ trait Compile
 
     //执行路由事件
     public function exec($key)
-    {echo 333;
+    {
         //匿名函数
         if ($this->route[$key]['callback'] instanceof Closure) {
             //反射分析闭包
@@ -111,16 +147,12 @@ trait Compile
                     }
                 }
             }
-            $this->result = $reflectionFunction->invokeArgs($args);
-        } else {
-            //设置控制器与方法
-            Request::set('get.'.Config::get('http.url_var'),
-                $this->route[$key]['callback']);
-
-            Controller::run($this->route[$key]['get']);
+            $this->setResult($reflectionFunction->invokeArgs($args));
+        } else if ($this->route[$key]['method'] == 'controller') {
+            //执行控制器
+            $result = Controller::run($this->route[$key]['callback']);
+            $this->setResult($result);
         }
-
-        return true;
     }
 
     //URL事件处理
