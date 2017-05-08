@@ -12,6 +12,7 @@ namespace houdunwang\route\build;
 
 use houdunwang\cache\Cache;
 use houdunwang\config\Config;
+use houdunwang\request\Request;
 
 /**
  * 路由处理类
@@ -23,11 +24,13 @@ class Base
 {
     use Compile, Setting, Controller;
     //路由定义
-    public $route = [];
+    protected $route = [];
     //请求的URI
     protected $requestUri;
     //路由缓存
     protected $cache = [];
+    //解析结果
+    protected $content;
     //正则替换字符
     protected $patterns
         = [
@@ -35,7 +38,96 @@ class Base
             ':all' => '.*',
         ];
 
-    //请求地址
+    /**
+     * 获取路由解析内容
+     *
+     * @return mixed
+     */
+    public function getContent()
+    {
+        $content = $this->content;
+        if (is_array($content)) {
+            return json_encode($content, JSON_UNESCAPED_UNICODE);
+        }
+
+        return $content;
+    }
+
+    /**
+     * 设置路由解析结果
+     *
+     * @param mixed $content
+     */
+    public function setContent($content)
+    {
+        $this->content = $content;
+    }
+
+    /**
+     * 解析路由
+     *
+     * @return bool|void
+     */
+    public function bootstrap()
+    {
+        //请求URL
+        $this->requestUri = $this->getRequestUri();
+        //设置路由缓存
+        if (Config::get('route.cache') && ($route = Cache::get('_ROUTES_'))) {
+            $this->route = $route;
+        } else {
+            $this->route = $this->parseRoute();
+        }
+        //匹配路由
+        foreach ($this->route as $key => $route) {
+            $method = '_'.$route['method'];
+            if ($this->$method($key) === true) {
+                $this->setContent($this->exec());
+
+                return $this;
+            }
+        }
+
+        //路由匹配失败时解析控制器
+        return $this->parseController();
+    }
+
+    /**
+     * 路由匹配失败时
+     * 执行默认控制器
+     *
+     * @return $this
+     */
+    protected function parseController()
+    {
+        //检查GET请求参数
+        $http = Request::get(Config::get('http.url_var'));
+        if ( ! empty($http)) {
+            $info                   = explode('/', $http);
+            $method                 = array_pop($http);
+            $info[count($info) - 1] = ucfirst($info[count($info) - 1]);
+            $action                 = implode('\\', $info).'@'.$method;
+        } else {
+            //默认控制器
+            $class  = Config::get('http.default_controller');
+            $method = Config::get('http.default_action');
+            $action = $class.'@'.$method;
+        }
+        $this->setContent($this->executeControllerAction($action));
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->getContent();
+    }
+
+    /**
+     * 请求地址
+     *
+     * @return string
+     */
     protected function getRequestUri()
     {
         if (isset($_SERVER['PATH_INFO'])) {
@@ -60,58 +152,21 @@ class Base
     /**
      * 使用正则表达式限制参数
      *
-     * @param mixed $name
+     * @param mixed  $rule
      * @param string $regexp
      *
      * @return $this
      */
-    public function where($name, $regexp = '')
+    public function where($rule, $regexp = '')
     {
-        if (is_array($name)) {
-            foreach ($name as $k => $v) {
-                $this->route[count($this->route) - 1]['where'][$k] = '#^'.$v
-                    .'$#';
-            }
-        } else {
-            $this->route[count($this->route) - 1]['where'][$name] = '#^'.$regexp
-                .'$#';
+        $rule = is_array($rule) ? $rule : [$rule => $regexp];
+        //当前路由在规则中的序号
+        $routeKey = count($this->route) - 1;
+        foreach ($rule as $k => $v) {
+            $this->route[$routeKey]['where'][$k] = '#^'.$v.'$#';
         }
 
         return $this;
-    }
-
-    /**
-     * 解析标签
-     *
-     * @return bool|void
-     */
-    public function dispatch()
-    {
-        //请求URL
-        $this->requestUri = $this->getRequestUri();
-        //设置路由缓存
-        if (Config::get('route.cache') && ($route = Cache::get('_ROUTES_'))) {
-            $this->route = $route;
-        } else {
-            $this->route = $this->parseRoute();
-        }
-        //匹配路由
-        foreach ($this->route as $key => $route) {
-            $method = '_'.$route['method'];
-            $this->$method($key);
-            if ($this->found) {
-                return;
-            }
-        }
-        //路由不存在时解析控制器
-        if ( ! $this->found) {
-            $this->setResult(
-                $this->controllerRun($this->getDefaultControllerAction())
-            );
-        } else {
-            //路由解析失败,控制器执行条件不满足时执行中间件
-            _404();
-        }
     }
 
     /**
@@ -159,21 +214,5 @@ class Base
         }
 
         return $this->route;
-    }
-
-    /**
-     * 获取路由参数
-     *
-     * @param $name
-     *
-     * @return mixed|null
-     */
-    public function input($name = null)
-    {
-        if (is_null($name)) {
-            return $this->args;
-        } else {
-            return isset($this->args[$name]) ? $this->args[$name] : null;
-        }
     }
 }

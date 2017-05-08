@@ -11,8 +11,7 @@
 namespace houdunwang\route\build;
 
 use Exception;
-use Config;
-use Request;
+use houdunwang\config\Config;
 use ReflectionMethod;
 use houdunwang\container\Container;
 use houdunwang\middleware\Middleware;
@@ -30,6 +29,23 @@ trait Controller
     protected $action;
     //路由参数
     protected $routeArgs = [];
+
+    /**
+     * @return mixed
+     */
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+    /**
+     * @param mixed $action
+     */
+    public function setAction($action)
+    {
+        $this->action = $action;
+    }
+
 
     /**
      * 获取默认控制器动作
@@ -146,56 +162,37 @@ trait Controller
     }
 
     /**
+     * 执行控制器
+     *
+     * @param       $action
+     * @param array $args
+     *
      * @return mixed
-     */
-    public function getAction()
-    {
-        return $this->action;
-    }
-
-    /**
-     * @param mixed $action
-     */
-    public function setAction($action)
-    {
-        $this->action = $action;
-    }
-
-    /**
-     * 执行动作
-     *
-     * @param array $args 方法参数
-     *
-     * @return mixed|void
      * @throws \Exception
      */
-    public function action(array $args)
+    public function executeControllerAction($action, $args = [])
     {
-        //禁止使用模块检测
-        if (in_array(MODULE, Config::get('http.deny_module'))) {
-            throw new Exception("模块禁止访问");
-        }
-        $class = Config::get('controller.app').'\\'.MODULE.'\\controller\\'
-            .CONTROLLER;
+        $info   = explode('@', $action);
+        $class  = Config::get('http.app').'\\'.$info[0];
+        $method = $info[1];
         //控制器不存在执行中间件
         if ( ! class_exists($class)) {
-            return _404();
+            throw new Exception('控制器不存在');
         }
         //方法不存在时执行中间件
-        if ( ! method_exists($class, ACTION)) {
-            return _404();
+        if ( ! method_exists($class, $method)) {
+            throw new Exception('控制器的方法不存在');
         }
+
+        //控制器开始运行中间件
+        Middleware::web('controller_start');
         $controller = Container::make($class, true);
-        //执行控制器中间件
-        Middleware::controller();
-        //执行动作
         try {
             /**
              * 参数处理
              * 控制器路由方式访问时解析路由参数并注入到控制器方法参数中
              */
-            //反射方法实例
-            $reflectionMethod = new \ReflectionMethod($class, ACTION);
+            $reflectionMethod = new \ReflectionMethod($class, $method);
             foreach ($reflectionMethod->getParameters() as $k => $p) {
                 if (isset($this->args[$p->name])) {
                     //如果为路由参数时使用路由参数赋值
@@ -211,14 +208,12 @@ trait Controller
                 }
             }
 
-            $this->args = [];
-
             //执行控制器方法
             return $reflectionMethod->invokeArgs($controller, $args);
         } catch (ReflectionException $e) {
             $action = new ReflectionMethod($controller, '__call');
 
-            return $action->invokeArgs($controller, [ACTION, '']);
+            return $action->invokeArgs($controller, [$method, '']);
         }
     }
 }

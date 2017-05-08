@@ -11,20 +11,23 @@
 namespace houdunwang\route\build;
 
 use Closure;
+use houdunwang\config\Config;
 use houdunwang\container\Container;
 use houdunwang\controller\Controller;
 use houdunwang\request\Request;
 
+/**
+ * 解析路由
+ * Trait Compile
+ *
+ * @package houdunwang\route\build
+ */
 trait Compile
 {
-    //匹配到路由
-    protected $found = false;
+    //匹配的路由列表下标
+    protected $matchRouteKey;
     //路由参数
     public $args = [];
-    //匹配成功的路由规则
-    protected $matchRoute;
-    //解析结果
-    protected $result;
 
     /**
      * 获取匹配成功的路由
@@ -33,37 +36,7 @@ trait Compile
      */
     public function getMatchRoute()
     {
-        return $this->matchRoute;
-    }
-
-    /**
-     * 设置匹配成功的路由
-     *
-     * @param mixed $matchRoute
-     */
-    private function setMatchRoute($matchRoute)
-    {
-        $this->matchRoute = $matchRoute;
-    }
-
-    /**
-     * 获取路由解析结果
-     *
-     * @return mixed
-     */
-    public function getResult()
-    {
-        return $this->result;
-    }
-
-    /**
-     * 设置路由解析结果
-     *
-     * @param mixed $result
-     */
-    public function setResult($result)
-    {
-        $this->result = $result;
+        return $this->route[$this->matchRouteKey];
     }
 
     //匹配路由
@@ -79,9 +52,9 @@ trait Compile
             //设置GET参数
             $this->args = $this->route[$key]['get'];
             //匹配成功的路由规则
-            $this->setMatchRoute($this->route[$key]);
+            $this->matchRouteKey = $key;
 
-            return $this->found = true;
+            return true;
         }
     }
 
@@ -98,7 +71,9 @@ trait Compile
             //参数列表
             foreach ($this->route[$key]['args'] as $n => $value) {
                 if (isset($matched[0][$n + 1])) {
-                    $args[$value[1]] = $matched[0][$n + 1];
+                    //数值类型转换
+                    $v               = $matched[0][$n + 1];
+                    $args[$value[1]] = is_numeric($v) ? intval($v) : $v;
                 }
             }
         }
@@ -123,9 +98,14 @@ trait Compile
         return true;
     }
 
-    //执行路由事件
-    public function exec($key)
+    /**
+     * 执行匹配成功的路由
+     *
+     * @return mixed
+     */
+    public function exec()
     {
+        $key = $this->matchRouteKey;
         //匿名函数
         if ($this->route[$key]['callback'] instanceof Closure) {
             //反射分析闭包
@@ -147,60 +127,68 @@ trait Compile
                     }
                 }
             }
-            $this->setResult($reflectionFunction->invokeArgs($args));
-        } else if ($this->route[$key]['method'] == 'controller') {
-            //执行控制器
-            $result = Controller::run($this->route[$key]['callback']);
-            $this->setResult($result);
-        }
-    }
 
-    //URL事件处理
-    protected function _alias($key)
-    {
-        if ($this->isMatch($key)) {
-            //替换GET参数
-            $url = $this->route[$key]['callback'];
-            foreach ($this->route[$key]['get'] as $k => $v) {
-                $url = str_replace('{'.$k.'}', $v, $url);
-            }
-            //解析后的GET参数设置到全局$_GET中
-            parse_str($url, $gets);
-            foreach ((array)$gets as $k => $v) {
-                Request::set('get.'.$k, $v);
-            }
-            Controller::run($gets);
+            return $reflectionFunction->invokeArgs($args);
+        }
+        //控制器动作
+        if (is_string($this->route[$key]['callback'])) {
+            return $this->executeControllerAction($this->route[$key]['callback']);
         }
     }
+//
+//    //URL事件处理
+//    protected function _alias($key)
+//    {
+//        if ($this->isMatch($key)) {
+//            //替换GET参数
+//            $url = $this->route[$key]['callback'];
+//
+//            foreach ($this->route[$key]['get'] as $k => $v) {
+//                $url = str_replace('{'.$k.'}', $v, $url);
+//            }
+//            //解析后的GET参数设置到全局GET中
+//            parse_str($url, $gets);
+//            foreach ((array)$gets as $k => $v) {
+//                Request::set('get.'.$k, $v);
+//            }
+//
+//            $info                          = explode('/',
+//                $gets[Config::get('http.url_var')]);
+//            $method                        = array_pop($info);
+//            $this->route[$key]['callback'] = implode('\\', $info).'@'.$method;
+//
+//            return true;
+//        }
+//    }
 
     //GET事件处理
     protected function _get($key)
     {
-        return IS_GET && $this->isMatch($key) && $this->exec($key);
+        return Request::isMethod('get') && $this->isMatch($key);
     }
 
     //POST事件处理
     protected function _post($key)
     {
-        return IS_POST && $this->isMatch($key) && $this->exec($key);
+        return Request::isMethod('post') && $this->isMatch($key);
     }
 
     //PUT事件处理
     protected function _put($key)
     {
-        return IS_PUT && $this->isMatch($key) && $this->exec($key);
+        return Request::isMethod('put') && $this->isMatch($key);
     }
 
     //DELETE事件
     protected function _delete($key)
     {
-        return IS_DELETE && $this->isMatch($key) && $this->exec($key);
+        return Request::isMethod('delete') && $this->isMatch($key);
     }
 
     //任意提交模式
     protected function _any($key)
     {
-        return $this->isMatch($key) && $this->exec($key);
+        return $this->isMatch($key);
     }
 
     //控制器路由
@@ -210,35 +198,36 @@ trait Compile
             && $this->isMatch($key)
         ) {
             //控制器方法
-            $method = $this->getRequestAction()
+            $method                        = strtolower(Request::getRequestType())
                 .ucfirst($this->route[$key]['get']['method']);
-            //从容器提取控制器对象
-            $info = explode('/', $this->route[$key]['callback']);
-            define('MODULE', array_shift($info));
-            define('CONTROLLER', array_shift($info));
-            define('ACTION', $method);
-            Controller::run();
+            $this->route[$key]['callback'] .= '@'.$method;
+            return true;
         }
     }
 
-    //获取请求方法
-    public function getRequestAction()
-    {
-        switch (true) {
-            case IS_GET:
-                return 'get';
-            case IS_POST:
-                return 'post';
-            case IS_PUT:
-                return 'put';
-            case IS_DELETE:
-                return 'delete';
-        }
-    }
-
-    //获取解析后的参数
+    /**
+     * 获取解析后的参数
+     *
+     * @return array
+     */
     public function getArg()
     {
         return $this->args;
+    }
+
+    /**
+     * 获取路由参数
+     *
+     * @param $name
+     *
+     * @return mixed|null
+     */
+    public function input($name = null)
+    {
+        if (is_null($name)) {
+            return $this->args;
+        } else {
+            return isset($this->args[$name]) ? $this->args[$name] : null;
+        }
     }
 }
