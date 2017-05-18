@@ -24,7 +24,6 @@
     "houdunwang/config": "~1.0",
     "houdunwang/cache": "~1.0",
     "houdunwang/request": "~1.0",
-    "houdunwang/controller": "~1.0",
     "houdunwang/container": "~1.0",
     "houdunwang/curl": "~1.0",
     "houdunwang/middleware": "~1.0"
