@@ -33,7 +33,9 @@
     "phpunit/phpunit": "^6.1"
   },
   "autoload": {
-    "files": [],
+    "files": [
+      "src/helper.php"
+    ],
     "psr-4": {
       "houdunwang\\route\\": "src"
     }
