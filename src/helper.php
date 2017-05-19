@@ -50,13 +50,12 @@ if ( ! function_exists('action')) {
      *
      * @param       $controller
      * @param       $action
-     * @param array $args
      *
      * @return mixed
      */
-    function action($controller, $action, $args = [])
+    function action($controller, $action)
     {
-
-        return call_user_func_array([new $controller, $action], $args);
+        return \houdunwang\route\Route::executeControllerAction($controller.'@'
+            .$action);
     }
 }
