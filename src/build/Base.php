@@ -45,12 +45,7 @@ class Base
      */
     public function getContent()
     {
-        $content = $this->content;
-        if (is_array($content)) {
-            return json_encode($content, JSON_UNESCAPED_UNICODE);
-        }
-
-        return $content;
+        return $this->content;
     }
 
     /**
