@@ -10,6 +10,8 @@
 
 namespace houdunwang\route;
 
+use houdunwang\route\controller\Message;
+
 /**
  * 控制器基础类
  * Class Controller
@@ -18,6 +20,8 @@ namespace houdunwang\route;
  */
 abstract class Controller
 {
+    use Message;
+
     /**
      * 验证码
      */

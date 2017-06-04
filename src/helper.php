@@ -1,18 +1,4 @@
 <?php
-if ( ! function_exists('view')) {
-    /**
-     * 显示模板
-     *
-     * @param string $tpl
-     * @param int    $expire
-     *
-     * @return mixed
-     */
-    function view($tpl = '', $expire = 0)
-    {
-        return \houdunwang\view\View::make($tpl, $expire);
-    }
-}
 if ( ! function_exists('widget')) {
     //解析页面组件
     function widget()

@@ -99,9 +99,11 @@ class Base
         $http = Request::get(Config::get('http.url_var'));
         if ( ! empty($http)) {
             $info                   = explode('/', $http);
-            $method                 = array_pop($http);
+            $method                 = array_pop($info);
+            $controller             = ucfirst(array_pop($info));
+            $module                 = array_pop($info);
             $info[count($info) - 1] = ucfirst($info[count($info) - 1]);
-            $action                 = implode('\\', $info).'@'.$method;
+            $action                 = Config::get('app.path').'\\'.$module.'\\controller\\'.$controller.'@'.$method;
         } else {
             //默认控制器
             $class  = Config::get('http.default_controller');

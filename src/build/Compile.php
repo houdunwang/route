@@ -26,6 +26,7 @@ trait Compile
 {
     //匹配的路由列表下标
     protected $matchRouteKey;
+
     //路由参数
     public $args = [];
 
@@ -51,6 +52,10 @@ trait Compile
             }
             //设置GET参数
             $this->args = $this->route[$key]['get'];
+            foreach ((array)$this->args as $k => $v) {
+                Request::set('get.'.$k, $v);
+            }
+
             //匹配成功的路由规则
             $this->matchRouteKey = $key;
 
@@ -135,31 +140,6 @@ trait Compile
             return $this->executeControllerAction($this->route[$key]['callback']);
         }
     }
-//
-//    //URL事件处理
-//    protected function _alias($key)
-//    {
-//        if ($this->isMatch($key)) {
-//            //替换GET参数
-//            $url = $this->route[$key]['callback'];
-//
-//            foreach ($this->route[$key]['get'] as $k => $v) {
-//                $url = str_replace('{'.$k.'}', $v, $url);
-//            }
-//            //解析后的GET参数设置到全局GET中
-//            parse_str($url, $gets);
-//            foreach ((array)$gets as $k => $v) {
-//                Request::set('get.'.$k, $v);
-//            }
-//
-//            $info                          = explode('/',
-//                $gets[Config::get('http.url_var')]);
-//            $method                        = array_pop($info);
-//            $this->route[$key]['callback'] = implode('\\', $info).'@'.$method;
-//
-//            return true;
-//        }
-//    }
 
     //GET事件处理
     protected function _get($key)
@@ -199,8 +179,9 @@ trait Compile
         ) {
             //控制器方法
             $method                        = strtolower(Request::getRequestType())
-                .ucfirst($this->route[$key]['get']['method']);
+                                             .ucfirst($this->route[$key]['get']['method']);
             $this->route[$key]['callback'] .= '@'.$method;
+
             return true;
         }
     }
