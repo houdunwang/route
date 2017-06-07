@@ -127,23 +127,9 @@ class Base
      */
     protected function getRequestUri()
     {
-        if (isset($_SERVER['PATH_INFO'])) {
-            $REQUEST_URI = $_SERVER['PATH_INFO'];
-        } else {
-            if (dirname($_SERVER['SCRIPT_NAME']) != '/') {
-                //有子目录的访问  hdphp/index.php形式
-                $REQUEST_URI = str_replace(
-                    dirname($_SERVER['SCRIPT_NAME']),
-                    '',
-                    $_SERVER['REQUEST_URI']
-                );
-            } else {
-                $REQUEST_URI = $_SERVER['REQUEST_URI'];
-            }
-        }
-        $REQUEST_URI = trim(preg_replace('/\w+\.php/i', '', $REQUEST_URI), '/');
-
-        return $REQUEST_URI ? parse_url($REQUEST_URI, PHP_URL_PATH) : '';
+        $REQUEST_URI = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $REQUEST_URI = str_replace($_SERVER['SCRIPT_NAME'], '', $REQUEST_URI);
+        return trim($REQUEST_URI,'/');
     }
 
     /**
@@ -197,9 +183,9 @@ class Base
                 if ($has) {
                     //有{.*?}问号，表示变量是可选的，前面加? 组合成/? 形式
                     //要不没变量时会多一个/
-                    $regexp = str_replace($ato[0], '?([^/]+?)'.$has, $regexp);
+                    $regexp = str_replace($ato[0], '?([a-z0-9]+?)'.$has, $regexp);
                 } else {
-                    $regexp = str_replace($ato[0], '([^/]+?)'.$has, $regexp);
+                    $regexp = str_replace($ato[0], '([a-z0-9]+?)'.$has, $regexp);
                 }
             }
             $this->route[$key]['regexp'] = '#^'.$regexp.'$#';
