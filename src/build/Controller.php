@@ -11,6 +11,7 @@
 namespace houdunwang\route\build;
 
 use Exception;
+use houdunwang\view\View;
 use ReflectionMethod;
 use houdunwang\container\Container;
 use houdunwang\middleware\Middleware;
@@ -73,13 +74,11 @@ trait Controller
         $info = explode('@', $action);
         $this->setController($controller = $info[0]);
         $this->setAction($action = $info[1]);
+        $path = str_replace(['controller', '\\'], ['view', '/'], Route::getController());
+        View::setPath(strtolower($path));
         //控制器不存在执行中间件
-        if ( ! class_exists($controller)) {
-            throw new Exception('控制器不存在');
-        }
-        //方法不存在时执行中间件
-        if ( ! method_exists($controller, $action)) {
-            throw new Exception('控制器的方法不存在');
+        if ( ! class_exists($controller) || ! method_exists($controller, $action)) {
+            throw new Exception('访问的动作不存在');
         }
         //控制器开始运行中间件
         Middleware::web('controller_start');

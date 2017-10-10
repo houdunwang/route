@@ -11,7 +11,7 @@
 namespace houdunwang\route\build;
 
 /**
- * 设置路由
+ * 设置路由规则
  * Trait Setting
  *
  * @package houdunwang\route\build

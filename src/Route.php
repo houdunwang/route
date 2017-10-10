@@ -22,31 +22,18 @@ class Route
 {
     protected static $link;
 
-    //更改缓存驱动
-    protected function driver()
-    {
-        self::$link = new Base();
-
-        return $this;
-    }
-
     public function __call($method, $params)
     {
-        if (is_null(self::$link)) {
-            $this->driver();
-        }
-
-        return call_user_func_array([self::$link, $method], $params);
+        return call_user_func_array([self::single(), $method], $params);
     }
 
     public static function single()
     {
-        static $link;
-        if (is_null($link)) {
-            $link = new static();
+        if ( ! self::$link) {
+            self::$link = new Base();
         }
 
-        return $link;
+        return self::$link;
     }
 
     public static function __callStatic($name, $arguments)

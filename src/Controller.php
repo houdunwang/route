@@ -11,6 +11,7 @@
 namespace houdunwang\route;
 
 use houdunwang\route\controller\Message;
+use Code;
 
 /**
  * 控制器基础类

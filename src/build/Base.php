@@ -13,6 +13,7 @@ namespace houdunwang\route\build;
 use houdunwang\cache\Cache;
 use houdunwang\config\Config;
 use houdunwang\request\Request;
+use houdunwang\route\Route;
 
 /**
  * 路由处理类
@@ -23,14 +24,16 @@ use houdunwang\request\Request;
 class Base
 {
     use Compile, Setting, Controller;
+
     //路由定义
     protected $route = [];
+
     //请求的URI
     protected $requestUri;
+
     //路由缓存
     protected $cache = [];
-    //解析结果
-    protected $content;
+
     //正则替换字符
     protected $patterns
         = [
@@ -39,61 +42,9 @@ class Base
         ];
 
     /**
-     * 获取路由解析内容
-     *
-     * @return mixed
+     * 设置默认控制器
      */
-    public function getContent()
-    {
-        return $this->content;
-    }
-
-    /**
-     * 设置路由解析结果
-     *
-     * @param mixed $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
-
-    /**
-     * 解析路由
-     *
-     * @return bool|void
-     */
-    public function bootstrap()
-    {
-        //请求URL
-        $this->requestUri = $this->getRequestUri();
-        //设置路由缓存
-        if (Config::get('route.cache') && ($route = Cache::get('_ROUTES_'))) {
-            $this->route = $route;
-        } else {
-            $this->route = $this->parseRoute();
-        }
-        //匹配路由
-        foreach ($this->route as $key => $route) {
-            $method = '_'.$route['method'];
-            if ($this->$method($key) === true) {
-                $this->setContent($this->exec());
-
-                return $this;
-            }
-        }
-
-        //路由匹配失败时解析控制器
-        return $this->parseController();
-    }
-
-    /**
-     * 路由匹配失败时
-     * 执行默认控制器
-     *
-     * @return $this
-     */
-    protected function parseController()
+    protected function setDefaultController()
     {
         //检查GET请求参数
         $http = Request::get(Config::get('http.url_var'));
@@ -110,14 +61,34 @@ class Base
             $method = Config::get('http.default_action');
             $action = $class.'@'.$method;
         }
-        $this->setContent($this->executeControllerAction($action));
-
-        return $this;
+        Route::any('.*', $action);
     }
 
-    public function __toString()
+    /**
+     * 解析路由
+     *
+     * @return bool|void
+     */
+    public function bootstrap()
     {
-        return $this->getContent();
+        $this->setDefaultController();
+        //请求URL
+        $this->requestUri = $this->getRequestUri();
+        //设置路由缓存
+        if (Config::get('route.cache') && ($route = Cache::get('_ROUTES_'))) {
+            $this->route = $route;
+        } else {
+            $this->route = $this->parseRoute();
+        }
+        //匹配路由
+        foreach ($this->route as $key => $route) {
+            $method = '_'.$route['method'];
+            if ($this->$method($key) === true) {
+                return $this;
+            }
+        }
+
+        return $this;
     }
 
     /**
@@ -129,7 +100,8 @@ class Base
     {
         $REQUEST_URI = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $REQUEST_URI = str_replace($_SERVER['SCRIPT_NAME'], '', $REQUEST_URI);
-        return trim($REQUEST_URI,'/');
+
+        return trim($REQUEST_URI, '/');
     }
 
     /**

@@ -40,7 +40,13 @@ trait Compile
         return $this->route[$this->matchRouteKey];
     }
 
-    //匹配路由
+    /**
+     * 路由匹配检测处理
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function isMatch($key)
     {
         if (preg_match($this->route[$key]['regexp'], $this->requestUri)) {
@@ -58,12 +64,19 @@ trait Compile
 
             //匹配成功的路由规则
             $this->matchRouteKey = $key;
+            $this->action        = $this->matchRouteKey;
 
             return true;
         }
     }
 
-    //获取请求参数
+    /**
+     * 获取请求参数
+     *
+     * @param $key
+     *
+     * @return array
+     */
     protected function getArgs($key)
     {
         $args = [];
@@ -86,7 +99,13 @@ trait Compile
         return $args;
     }
 
-    //验证路由参数
+    /**
+     * 验证路由参数
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function checkArgs($key)
     {
         $route = $this->route[$key];
@@ -116,12 +135,11 @@ trait Compile
             //反射分析闭包
             $reflectionFunction
                   = new \ReflectionFunction($this->route[$key]['callback']);
-            $gets = $this->route[$key]['get'];
             $args = [];
             foreach ($reflectionFunction->getParameters() as $k => $p) {
-                if (isset($gets[$p->name])) {
+                if (isset($this->args[$p->name])) {
                     //如果GET变量中存在则将GET变量值赋予,也就是说GET优先级高
-                    $args[$p->name] = $gets[$p->name];
+                    $args[$p->name] = $this->args[$p->name];
                 } else {
                     //如果类型为类时分析类
                     if ($dependency = $p->getClass()) {
@@ -134,44 +152,79 @@ trait Compile
             }
 
             return $reflectionFunction->invokeArgs($args);
-        }
-        //控制器动作
-        if (is_string($this->route[$key]['callback'])) {
+        } else {
+            //控制器动作
             return $this->executeControllerAction($this->route[$key]['callback']);
         }
     }
 
-    //GET事件处理
+    /**
+     * GET事件处理
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _get($key)
     {
         return Request::isMethod('get') && $this->isMatch($key);
     }
 
-    //POST事件处理
+    /**
+     * POST事件处理
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _post($key)
     {
         return Request::isMethod('post') && $this->isMatch($key);
     }
 
-    //PUT事件处理
+    /**
+     * PUT事件处理
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _put($key)
     {
         return Request::isMethod('put') && $this->isMatch($key);
     }
 
-    //DELETE事件
+    /**
+     * DELETE事件
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _delete($key)
     {
         return Request::isMethod('delete') && $this->isMatch($key);
     }
 
-    //任意提交模式
+    /**
+     * 任意提交模式
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _any($key)
     {
         return $this->isMatch($key);
     }
 
-    //控制器路由
+    /**
+     * 控制器路由
+     *
+     * @param $key
+     *
+     * @return bool
+     */
     protected function _controller($key)
     {
         if ($this->route[$key]['method'] == 'controller'
