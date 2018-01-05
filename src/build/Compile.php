@@ -126,6 +126,7 @@ trait Compile
      * 执行匹配成功的路由
      *
      * @return mixed
+     * @throws \Exception
      */
     public function exec()
     {
@@ -133,9 +134,8 @@ trait Compile
         //匿名函数
         if ($this->route[$key]['callback'] instanceof Closure) {
             //反射分析闭包
-            $reflectionFunction
-                  = new \ReflectionFunction($this->route[$key]['callback']);
-            $args = [];
+            $reflectionFunction = new \ReflectionFunction($this->route[$key]['callback']);
+            $args               = [];
             foreach ($reflectionFunction->getParameters() as $k => $p) {
                 if (isset($this->args[$p->name])) {
                     //如果GET变量中存在则将GET变量值赋予,也就是说GET优先级高

@@ -67,7 +67,7 @@ class Base
     /**
      * 解析路由
      *
-     * @return bool|void
+     * @return $this
      */
     public function bootstrap()
     {

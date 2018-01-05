@@ -30,4 +30,14 @@ abstract class Controller
     {
         Code::make();
     }
+
+    /**
+     * 404 NotFound
+     *
+     * @return mixed
+     */
+    final public function _404($return = false)
+    {
+        return Response::_404($return);
+    }
 }

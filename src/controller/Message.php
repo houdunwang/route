@@ -28,6 +28,7 @@ trait Message
 
     /**
      * 跳转链接
+     *
      * @var
      */
     protected $url;
@@ -75,7 +76,7 @@ trait Message
      *
      * @return mixed|string
      */
-    final protected function back()
+    protected function back()
     {
         return message('', 'back');
     }
@@ -87,7 +88,7 @@ trait Message
      *
      * @return array
      */
-    final protected function success($content)
+    protected function success($content)
     {
         return message($content, $this->getRedirect(), 'success');
     }
@@ -99,7 +100,7 @@ trait Message
      *
      * @return array
      */
-    final protected function error($content)
+    protected function error($content)
     {
         return message($content, $this->getRedirect(), 'error');
     }
