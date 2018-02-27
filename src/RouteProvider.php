@@ -1,4 +1,5 @@
-<?php
+<?php namespace houdunwang\route;
+
 /** .-------------------------------------------------------------------
  * |  Software: [HDCMS framework]
  * |      Site: www.hdcms.com
@@ -7,14 +8,13 @@
  * |    WeChat: aihoudun
  * | Copyright (c) 2012-2019, www.houdunwang.com. All Rights Reserved.
  * '-------------------------------------------------------------------*/
-
-namespace houdunwang\route;
-
 use houdunwang\framework\build\Provider;
+use houdunwang\config\Config;
 
 class RouteProvider extends Provider
 {
     use Csrf;
+
     //延迟加载
     public $defer = false;
 

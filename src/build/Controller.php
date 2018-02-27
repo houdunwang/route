@@ -11,6 +11,7 @@
 namespace houdunwang\route\build;
 
 use Exception;
+use houdunwang\route\Route;
 use houdunwang\view\View;
 use ReflectionMethod;
 use houdunwang\container\Container;

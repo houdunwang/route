@@ -37,7 +37,8 @@ trait Csrf
     protected function csrfCheck()
     {
         $this->setServiceToken();
-        $status = Config::get('csrf.open') && Request::post() && ($_SERVER['HTTP_HOST'] == Request::getHost($_SERVER['HTTP_REFERER']));
+        $status = Config::get('csrf.open') && Request::post()
+                  && ($_SERVER['HTTP_HOST'] == Request::getHost($_SERVER['HTTP_REFERER']));
         if ($status) {
             //比较CSRF
             if ($this->getClientToken() == $this->token) {
@@ -62,7 +63,7 @@ trait Csrf
     {
         $token = Session::get('csrf_token');
         if (Config::get('csrf.open') && ! $token) {
-            $token = md5(clientIp().microtime(true));
+            $token = md5(clientIp() . microtime(true));
             Session::set('csrf_token', $token);
             /**
              * 生成COOKIE令牌
